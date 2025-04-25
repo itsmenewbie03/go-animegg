@@ -3,12 +3,11 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"log"
 	"os"
 
 	"github.com/itsmenewbie03/go-animegg/scrapers/animegg"
-	list "github.com/itsmenewbie03/go-animegg/ui"
+	"github.com/itsmenewbie03/go-animegg/ui/mainmenu"
 )
 
 var (
@@ -30,8 +29,6 @@ func main() {
 
 	switch {
 	case *searchQuery != "":
-		list.Render()
-		panic("TODO: implement integration")
 		results, err := client.Search(*searchQuery)
 		handleResult(results, err)
 	case *popularFlag:
@@ -47,8 +44,7 @@ func main() {
 		results, err := client.Videos(*videosFlag)
 		handleResult(results, err)
 	default:
-		fmt.Println("Use flags to specify action")
-		flag.Usage()
+		mainmenu.Render(client)
 	}
 }
 
