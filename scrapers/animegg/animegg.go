@@ -25,12 +25,13 @@ type Client struct {
 }
 
 type Anime struct {
-	Title       string   `json:"title"`
-	URL         string   `json:"url"`
-	Thumbnail   string   `json:"thumbnail"`
-	Description string   `json:"description,omitempty"`
-	Status      string   `json:"status,omitempty"`
-	Genres      []string `json:"genres,omitempty"`
+	Title         string   `json:"title"`
+	URL           string   `json:"url"`
+	Thumbnail     string   `json:"thumbnail"`
+	Description   string   `json:"description,omitempty"`
+	Status        string   `json:"status,omitempty"`
+	Genres        []string `json:"genres,omitempty"`
+	TotalEpisodes string   `json:"episodes"`
 }
 
 type Episode struct {
@@ -84,17 +85,30 @@ func (c *Client) Search(query string) ([]Anime, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	var results []Anime
 	doc.Find(".mse").Each(func(i int, s *goquery.Selection) {
 		title := s.Find(".first h2").Text()
 		link, _ := s.Attr("href")
 		img, _ := s.Find("img").Attr("src")
 
+		// Extract status and episode count
+		var status, episodes string
+		s.Find(".first div").Each(func(i int, sel *goquery.Selection) {
+			text := strings.TrimSpace(sel.Text())
+			if strings.HasPrefix(text, "Status") {
+				status = strings.TrimPrefix(text, "Status : ")
+			}
+			if strings.HasPrefix(text, "Episodes") {
+				episodes = strings.TrimPrefix(text, "Episodes: ")
+			}
+		})
+
 		results = append(results, Anime{
-			Title:     strings.TrimSpace(title),
-			URL:       Link(link).Canonical(),
-			Thumbnail: img,
+			Title:         strings.TrimSpace(title),
+			URL:           Link(link).Canonical(),
+			Thumbnail:     img,
+			Status:        status,
+			TotalEpisodes: episodes,
 		})
 	})
 
@@ -180,12 +194,12 @@ func (c *Client) Episodes(url string) ([]Episode, error) {
 	doc.Find(".newmanga li div").Each(func(i int, s *goquery.Selection) {
 		numStr := s.Find(".anm_det_pop strong").Text()
 		num := parseEpisodeNumber(numStr)
-		title := s.Find(".anititle").Text()
+		epTitle := s.Find(".anititle").Text()
 		link, _ := s.Find(".anm_det_pop").Attr("href")
 
 		episodes = append(episodes, Episode{
 			Number: num,
-			Title:  fmt.Sprintf("Episode %s - %s", formatNumber(num), title),
+			Title:  fmt.Sprintf("Episode %s - %s", formatNumber(num), epTitle),
 			URL:    Link(link).Canonical(),
 		})
 	})
