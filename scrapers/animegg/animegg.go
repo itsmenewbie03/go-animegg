@@ -341,7 +341,7 @@ func extractLanguage(iframe *goquery.Selection) string {
 }
 
 func parseEpisodeNumber(s string) float64 {
-	re := regexp.MustCompile(`(\d+(?:\.\d+)?)`)
+	re := regexp.MustCompile(`(\d+$(?:\.\d+$)?)`)
 	match := re.FindStringSubmatch(s)
 	if len(match) == 0 {
 		return 0
